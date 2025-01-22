@@ -1,8 +1,20 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { afterRender, Component, ViewChild } from '@angular/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { ColumnRegular, RevoGrid, Template } from '@revolist/angular-datagrid';
+import {
+  ColumnGrouping,
+  ColumnRegular,
+  RevoGrid,
+  Template,
+} from '@revolist/angular-datagrid';
 import { flavours, rowFormat } from '../../interfaces/rowFormat';
+import { DateCellTemplateComponent } from './components/date-cell-template/date-cell-template.component';
+
+import Plugin from '@revolist/revogrid-column-date';
+import SelectTypePlugin from '@revolist/revogrid-column-select';
+import NumberColumnType from '@revolist/revogrid-column-numeral';
+import { CheckboxCellTemplateComponent } from './components/checkbox-cell-template/checkbox-cell-template.component';
+
 @Component({
   selector: 'app-revo',
   standalone: true,
@@ -77,17 +89,129 @@ export class RevoComponent {
     },
   ];
 
-  public columns: ColumnRegular[] = [
-    { prop: 'name', name: 'Nome' },
-    { prop: 'age', name: 'Idade' },
-    { prop: 'birthDate', name: 'Data de nascimento', columnType: 'date' },
-    { prop: 'isFromAlagoas', name: 'É de Alagoas?' },
-    { prop: 'iceCreamFlavours', name: 'Sabor favorito de sorvete' },
-    { prop: 'email', name: 'Email' },
-    { prop: 'phoneNumber', name: 'Telefone' },
+  private flavourDropdown = {
+    labelKey: 'label',
+    valueKey: 'value',
+    source: [
+      { label: 'Baunilha', value: flavours.vanilla },
+      { label: 'Chocolate', value: flavours.chocolate },
+      { label: 'Morango', value: flavours.strawberry },
+    ],
+  };
+
+  public columns: (ColumnGrouping | ColumnRegular)[] = [
+    {
+      prop: 'name',
+      name: 'Nome',
+      pin: 'colPinStart',
+      rowDrag: () => !this.defMode,
+      autoSize: true,
+    },
+    { prop: 'age', name: 'Idade', columnType: 'int', autoSize: true },
+    {
+      prop: 'birthDate',
+      name: 'Data de nascimento',
+      cellTemplate: Template(DateCellTemplateComponent),
+      columnType: 'date',
+      autoSize: true,
+    },
+    {
+      prop: 'isFromAlagoas',
+      name: 'É de Alagoas?',
+      cellTemplate: Template(CheckboxCellTemplateComponent),
+      autoSize: true,
+    },
+    {
+      ...this.flavourDropdown,
+      prop: 'iceCreamFlavours',
+      name: 'Sabor favorito de sorvete',
+      columnType: 'select',
+      autoSize: true,
+    },
+    { prop: 'email', name: 'Email', autoSize: true },
+
+    {
+      name: 'Sistemas operacionais',
+      children: [
+        {
+          prop: 'windows',
+          name: 'Windows',
+          cellTemplate: Template(CheckboxCellTemplateComponent),
+          autoSize: true,
+        },
+        {
+          prop: 'mac',
+          name: 'Mac',
+          cellTemplate: Template(CheckboxCellTemplateComponent),
+          autoSize: true,
+        },
+        {
+          prop: 'linux',
+          name: 'Linux',
+          cellTemplate: Template(CheckboxCellTemplateComponent),
+          autoSize: true,
+        },
+      ],
+    },
   ];
+
+  public columnTypes = {
+    select: new SelectTypePlugin(),
+    date: new Plugin(),
+    int: new NumberColumnType('0'),
+    float: new NumberColumnType('0,0'),
+  };
+
+  constructor() {
+    afterRender(() => {
+      this.grid.canMoveColumns = true;
+      this.grid.autoSizeColumn = true;
+      this.grid.stretch = true;
+      this.grid.resize = true;
+      this.grid.theme = 'material';
+      this.grid.range = true;
+    });
+  }
 
   public changeMode() {
     this.defMode = !this.defMode;
+    if (this.defMode) {
+      // Modo de edição das colunas
+      this.grid.canMoveColumns = true;
+      this.grid.resize = true;
+    } else {
+      // Modo de edição das linhas
+      this.grid.canMoveColumns = false;
+      this.grid.resize = false;
+    }
+  }
+
+  public addColumn() {}
+
+  public removeColumn() {
+    const newColumn = { prop: 'phoneNumber', name: 'Telefone', autoSize: true };
+    this.columns.splice(2, 0, newColumn);
+    this.grid.columns = this.columns
+  }
+
+  public addRow() {
+    this.source.push({
+      name: '',
+      age: 0,
+      birthDate: new Date(),
+      isFromAlagoas: false,
+      iceCreamFlavours: flavours.vanilla,
+      email: '',
+      phoneNumber: '',
+      windows: false,
+      mac: false,
+      linux: false,
+    });
+    // this.grid.row;
+  }
+
+  public removeLastRow() {
+    this.source.pop();
+    this.grid.source = this.source;
   }
 }

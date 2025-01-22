@@ -6,23 +6,21 @@
     </mat-slide-toggle>
   </div>
   <div *ngIf="defMode" style="display: flex; gap: 10px">
-    <button>Adicionar Coluna</button>
-    <button>Remover Coluna</button>
+    <button (click)="addColumn()">Adicionar Coluna</button>
+    <button (click)="removeColumn()">Remover Coluna</button>
   </div>
   <div *ngIf="!defMode" style="display: flex; gap: 10px">
-    <button>Adicionar Linha</button>
-    <button>Remover Linha</button>
+    <button (click)="addRow()">Adicionar Linha</button>
+    <button (click)="removeLastRow()">Remover ultima Linha</button>
   </div>
 </div>
 
-<div style="width: 95%; height: 260px; padding-left: 30px">
-  <revo-grid
-    #grid
-    style="height: 100%; width: 100%"
-    [columns]="columns"
-    [source]="source"
-    [resize]="true"
-    [rowHeaders]="true"
-    [stretch]="true"
-  ></revo-grid>
-</div>
+<revo-grid
+  style="width: 80%; height: 260px; padding-left: 30px"
+  #grid
+  range
+  [columns]="columns"
+  [source]="source"
+  [rowHeaders]="true"
+  [columnTypes]="columnTypes"
+></revo-grid>
